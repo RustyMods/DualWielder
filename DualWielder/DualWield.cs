@@ -12,8 +12,17 @@ public class DualWield : MonoBehaviour
     private bool m_isDualWielding;
     private string m_lastLeftItem = "";
     private bool m_shouldChangeAttachPoint;
+    public bool m_isHidingShowingItems;
 
     private Transform? m_leftAttachPoint;
+    public DualWieldState _state = new();
+    public class DualWieldState
+    {
+        public bool wasDualWielding;
+        public ItemDrop.ItemData? hiddenLeft;
+        public ItemDrop.ItemData? hiddenRight;
+    }
+    
     public void Awake()
     {
         Transform? backOneHandAttach = Utils.FindChild(transform, "BackOneHanded_attach");
@@ -175,7 +184,7 @@ public class DualWield : MonoBehaviour
             if (!__instance.TryGetComponent(out DualWield dualWield)) return;
             if (dualWield.m_rightItem != item && dualWield.m_leftItem != item) return;
             dualWield.m_lastLeftItem = dualWield.m_leftItem?.m_shared.m_name ?? "";
-
+            
             dualWield.m_rightItem?.SetDualWielding(false);
             
             if (item == dualWield.m_rightItem && dualWield.m_leftItem != null)
@@ -190,6 +199,40 @@ public class DualWield : MonoBehaviour
             dualWield.m_isDualWielding = false;
         }
     }
+    
+    [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.HideHandItems))]
+    private static class Humanoid_HideHandItems_Patch
+    {
+        [UsedImplicitly]
+        private static void Prefix(Humanoid __instance)
+        {
+            if (!__instance.TryGetComponent(out DualWield dualWield) || !dualWield.m_isDualWielding) return;
+            dualWield._state.wasDualWielding = true;
+            dualWield._state.hiddenLeft = __instance.m_leftItem;
+            dualWield._state.hiddenRight = __instance.m_rightItem;
+        }
+    }
+
+    [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.ShowHandItems))]
+    private static class Humanoid_ShowHandItems_Patch
+    {
+        [UsedImplicitly]
+        private static bool Prefix(Humanoid __instance, bool onlyRightHand, bool animation)
+        {
+            if (onlyRightHand) return true;
+            if (!__instance.TryGetComponent(out DualWield dualWield) || !dualWield._state.wasDualWielding) return true;
+
+            __instance.EquipItem(dualWield._state.hiddenRight); // needed to make sure right item was equipped first
+            __instance.EquipItem(dualWield._state.hiddenLeft);
+            
+            dualWield._state.wasDualWielding = false;
+            dualWield._state.hiddenLeft = null;
+            dualWield._state.hiddenRight = null;
+
+            if (animation) __instance.m_zanim.SetTrigger("equip_hip");
+            return false;
+        }
+    }
 
     [HarmonyPatch(typeof(ItemDrop.ItemData), nameof(ItemDrop.ItemData.GetTooltip), typeof(ItemDrop.ItemData), typeof(int), typeof(bool), typeof(float), typeof(int))]
     private static class ItemDrop_ItemData_GetTooltip_Patch
@@ -198,7 +241,7 @@ public class DualWield : MonoBehaviour
         private static void Postfix(ItemDrop.ItemData item, ref string __result)
         {
             if (!item.IsDualWielding()) return;
-            __result += $"\n<color=orange>★ {DualWielderPlugin.DualWieldKey} ★</color>";
+            __result += $"\n<color=orange>❖ {DualWielderPlugin.DualWieldKey} ❖</color>";
         }
     }
 }

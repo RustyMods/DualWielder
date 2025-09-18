@@ -239,18 +239,18 @@ public class Skill
 			if (skill.Configurable)
 			{
 				string nameKey = skill.Name.Key;
-				string englishName = new Regex("['[\"\\]]").Replace(english.Localize(nameKey), "").Trim();
-				string localizedName = Localization.instance.Localize(nameKey).Trim();
+				// string englishName = new Regex("['[\"\\]]").Replace(english.Localize(nameKey), "").Trim();
+				string localizedName = Localization.instance.Localize("$" + nameKey).Trim();
 
-				ConfigEntry<float> skillGain = config(englishName, "Skill gain factor", skill.SkillGainFactor, new ConfigDescription("The rate at which you gain experience for the skill.", new AcceptableValueRange<float>(0.01f, 5f), new ConfigurationManagerAttributes { Category = localizedName }));
+				ConfigEntry<float> skillGain = config(localizedName, "Skill gain factor", skill.SkillGainFactor, new ConfigDescription("The rate at which you gain experience for the skill.", new AcceptableValueRange<float>(0.01f, 5f), new ConfigurationManagerAttributes { Category = localizedName }));
 				skill.SkillGainFactor = skillGain.Value;
 				skillGain.SettingChanged += (_, _) => skill.SkillGainFactor = skillGain.Value;
 
-				ConfigEntry<float> skillEffect = config(englishName, "Skill effect factor", skill.SkillEffectFactor, new ConfigDescription("The power of the skill, based on the default power.", new AcceptableValueRange<float>(0.01f, 5f), new ConfigurationManagerAttributes { Category = localizedName }));
+				ConfigEntry<float> skillEffect = config(localizedName, "Skill effect factor", skill.SkillEffectFactor, new ConfigDescription("The power of the skill, based on the default power.", new AcceptableValueRange<float>(0.01f, 5f), new ConfigurationManagerAttributes { Category = localizedName }));
 				skill.SkillEffectFactor = skillEffect.Value;
 				skillEffect.SettingChanged += (_, _) => skill.SkillEffectFactor = skillEffect.Value;
 
-				ConfigEntry<int> skillLoss = config(englishName, "Skill loss", skill.skillLoss, new ConfigDescription("How much experience to lose on death.", new AcceptableValueRange<int>(0, 100), new ConfigurationManagerAttributes { Category = localizedName }));
+				ConfigEntry<int> skillLoss = config(localizedName, "Skill loss", skill.skillLoss, new ConfigDescription("How much experience to lose on death.", new AcceptableValueRange<int>(0, 100), new ConfigurationManagerAttributes { Category = localizedName }));
 				skill.skillLoss = skillLoss.Value;
 				skillLoss.SettingChanged += (_, _) => skill.skillLoss = skillLoss.Value;
 			}
