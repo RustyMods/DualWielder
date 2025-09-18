@@ -1,0 +1,9 @@
+{
+  "name": "DualWielder",
+  "version_number": "1.0.0",
+  "website_url": "",
+  "description": "Allows players to equip and use two different one-handed weapons simultaneously",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2202"
+  ]
+}
