@@ -31,6 +31,8 @@ namespace DualWielder
         private static ConfigEntry<float> _damageModifier = null!;
         public static bool CombineDamages => _combineDamages.Value is Toggle.On;
         public static float DamageModifier => _damageModifier.Value;
+
+        public static string DualWieldKey = string.Empty;
         public void Awake()
         {
             _serverConfigLocked = config("1 - General", "Lock Configuration", Toggle.On, "If on, the configuration is locked and can be changed by server admins only.");
@@ -56,7 +58,8 @@ namespace DualWielder
             
             Skill dualSkill = new Skill("DualWielder", "dualwielder_icon.png");
             dualSkill.Name.English("Dual Wield");
-            dualSkill.Description.English("Reduces damage reduction from using two weapons");
+            DualWieldKey = $"${dualSkill.Name.Key}";
+            dualSkill.Description.English("Increases damage effectiveness while dual wielding.");
             dualSkill.Configurable = true;
 
             Assembly assembly = Assembly.GetExecutingAssembly();

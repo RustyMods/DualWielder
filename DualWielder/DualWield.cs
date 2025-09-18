@@ -173,7 +173,7 @@ public class DualWield : MonoBehaviour
         private static void Postfix(Humanoid __instance, ItemDrop.ItemData item)
         {
             if (!__instance.TryGetComponent(out DualWield dualWield)) return;
-            if (!dualWield.m_isDualWielding) return;
+            if (dualWield.m_rightItem != item && dualWield.m_leftItem != item) return;
             dualWield.m_lastLeftItem = dualWield.m_leftItem?.m_shared.m_name ?? "";
 
             dualWield.m_rightItem?.SetDualWielding(false);
@@ -188,6 +188,17 @@ public class DualWield : MonoBehaviour
             dualWield.m_rightItem = null;
             dualWield.m_leftItem = null;
             dualWield.m_isDualWielding = false;
+        }
+    }
+
+    [HarmonyPatch(typeof(ItemDrop.ItemData), nameof(ItemDrop.ItemData.GetTooltip), typeof(ItemDrop.ItemData), typeof(int), typeof(bool), typeof(float), typeof(int))]
+    private static class ItemDrop_ItemData_GetTooltip_Patch
+    {
+        [UsedImplicitly]
+        private static void Postfix(ItemDrop.ItemData item, ref string __result)
+        {
+            if (!item.IsDualWielding()) return;
+            __result += $"\n<color=orange>★ {DualWielderPlugin.DualWieldKey} ★</color>";
         }
     }
 }
