@@ -78,7 +78,7 @@ public class DualWield : MonoBehaviour
             if (__instance.IsPlayer() || hit?.GetAttacker() is not {} attacker || attacker is not Player player) return;
             if (!player.gameObject.TryGetComponent(out DualWield component)) return;
             if (!component.m_isDualWielding) return;
-            player.RaiseSkill("DualWielder", 1f);
+            player.RaiseSkill("DualWielder");
         }
     }
     

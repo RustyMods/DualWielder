@@ -21,54 +21,39 @@ namespace DualWielder
         internal const string Author = "RustyMods";
         private const string ModGUID = Author + "." + ModName;
         private const string ConfigFileName = ModGUID + ".cfg";
-
-        private static readonly string ConfigFileFullPath =
-            Paths.ConfigPath + Path.DirectorySeparatorChar + ConfigFileName;
-
+        private static readonly string ConfigFileFullPath = Paths.ConfigPath + Path.DirectorySeparatorChar + ConfigFileName;
         internal static string ConnectionError = "";
         private readonly Harmony _harmony = new(ModGUID);
         public static readonly ManualLogSource DualWielderLogger = BepInEx.Logging.Logger.CreateLogSource(ModName);
-
-        private static readonly ConfigSync ConfigSync = new(ModGUID)
-            { DisplayName = ModName, CurrentVersion = ModVersion, MinimumRequiredVersion = ModVersion };
-
-        public enum Toggle
-        {
-            On = 1,
-            Off = 0
-        }
+        private static readonly ConfigSync ConfigSync = new(ModGUID) { DisplayName = ModName, CurrentVersion = ModVersion, MinimumRequiredVersion = ModVersion };
+        public enum Toggle { On = 1, Off = 0 }
 
         private static ConfigEntry<Toggle> _serverConfigLocked = null!;
         private static ConfigEntry<Toggle> _applyLeftHandedDamage = null!;
         private static ConfigEntry<float> _totalDamageMultiplier = null!;
-
         public static bool ApplyLeftHandedDamage => _applyLeftHandedDamage.Value is Toggle.On;
         public static float DamageModifier => _totalDamageMultiplier.Value;
-
         public void Awake()
         {
-            _serverConfigLocked = config("1 - General", "Lock Configuration", Toggle.On,
-                "If on, the configuration is locked and can be changed by server admins only.");
+            _serverConfigLocked = config("1 - General", "Lock Configuration", Toggle.On, "If on, the configuration is locked and can be changed by server admins only.");
             _ = ConfigSync.AddLockingConfigEntry(_serverConfigLocked);
             _applyLeftHandedDamage = config("2 - Settings", "Combine Weapon Damages", Toggle.On, "If on, when dual-wielding, left item damage is added to right-item");
-            _totalDamageMultiplier = config("2 - Settings", "Total damage modifier", 0.5f, new ConfigDescription("If combining weapon damages, set modifier for total damage output, 0.5 = 50% damage, to compensate for left item added damage",
-                    new AcceptableValueRange<float>(0f, 1f)));
+            _totalDamageMultiplier = config("2 - Settings", "Total Damage Modifier", 0.5f, new ConfigDescription("If combining weapon damages, set modifier for total damage output, 0.5 = 50% damage, to compensate for left item added damage",
+                new AcceptableValueRange<float>(0f, 1f)));
 
             Skill dualSkill = new Skill("DualWielder", "dualwielder_icon.png");
             dualSkill.Name.English("Dual Wield");
             dualSkill.Description.English("Reduces damage reduction from using two weapons");
             dualSkill.Configurable = true;
-            
+
             Assembly assembly = Assembly.GetExecutingAssembly();
             _harmony.PatchAll(assembly);
             SetupWatcher();
         }
-
         private void OnDestroy()
         {
             Config.Save();
         }
-
         private void SetupWatcher()
         {
             FileSystemWatcher watcher = new(Paths.ConfigPath, ConfigFileName);
@@ -79,7 +64,6 @@ namespace DualWielder
             watcher.SynchronizingObject = ThreadingHelper.SynchronizingObject;
             watcher.EnableRaisingEvents = true;
         }
-
         private void ReadConfigValues(object sender, FileSystemEventArgs e)
         {
             if (!File.Exists(ConfigFileFullPath)) return;
@@ -124,34 +108,6 @@ namespace DualWielder
             [UsedImplicitly] public bool? Browsable = null!;
             [UsedImplicitly] public string? Category = null!;
             [UsedImplicitly] public Action<ConfigEntryBase>? CustomDrawer = null!;
-        }
-
-        class AcceptableShortcuts : AcceptableValueBase
-        {
-            public AcceptableShortcuts() : base(typeof(KeyboardShortcut))
-            {
-            }
-
-            public override object Clamp(object value) => value;
-            public override bool IsValid(object value) => true;
-
-            public override string ToDescriptionString() =>
-                "# Acceptable values: " + string.Join(", ", UnityInput.Current.SupportedKeyCodes);
-        }
-    }
-
-    public static class KeyboardExtensions
-    {
-        public static bool IsKeyDown(this KeyboardShortcut shortcut)
-        {
-            return shortcut.MainKey != KeyCode.None && Input.GetKeyDown(shortcut.MainKey) &&
-                   shortcut.Modifiers.All(Input.GetKey);
-        }
-
-        public static bool IsKeyHeld(this KeyboardShortcut shortcut)
-        {
-            return shortcut.MainKey != KeyCode.None && Input.GetKey(shortcut.MainKey) &&
-                   shortcut.Modifiers.All(Input.GetKey);
         }
     }
 }

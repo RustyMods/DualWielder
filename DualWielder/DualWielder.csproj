@@ -107,7 +107,6 @@
     <ItemGroup>
         <Compile Include="DualWield.cs" />
         <Compile Include="ItemDataExtensions.cs" />
-        <Compile Include="Managers\LocalizationManager.cs"/>
         <Compile Include="Managers\SkillManager.cs" />
         <Compile Include="Plugin.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
@@ -128,13 +127,11 @@
         <Content Include="Thunderstore\CHANGELOG.md"/>
         <Content Include="Thunderstore\icon.png" />
         <Content Include="Thunderstore\manifest.json"/>
-        <EmbeddedResource Include="translations\English.yml"/>
         <Content Include="Thunderstore\README.md" />
         <Content Include="UpdateManifest.ps1"/>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.18.2"/>
-        <PackageReference Include="YamlDotNet" Version="13.2.0"/>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
