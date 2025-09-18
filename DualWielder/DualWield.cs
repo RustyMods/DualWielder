@@ -12,11 +12,11 @@ public class DualWield : MonoBehaviour
     private bool m_isDualWielding;
     private string m_lastLeftItem = "";
     private bool m_shouldChangeAttachPoint;
-    public bool m_isHidingShowingItems;
 
-    private Transform? m_leftAttachPoint;
-    public DualWieldState _state = new();
-    public class DualWieldState
+    private Transform? m_backLeftMelee;
+    private readonly DualWieldState _state = new();
+
+    private class DualWieldState
     {
         public bool wasDualWielding;
         public ItemDrop.ItemData? hiddenLeft;
@@ -30,7 +30,7 @@ public class DualWield : MonoBehaviour
         go.name = "BackOneHanded_left_attach";
         go.localPosition = new Vector3(-0.0028f, 0.0047f, -0.0022f);
         go.localRotation = Quaternion.Euler(117.401f, -91.143f, -85.99f);
-        m_leftAttachPoint = go;
+        m_backLeftMelee = go;
     }
     
     [HarmonyPatch(typeof(FejdStartup), nameof(FejdStartup.Awake))]
@@ -102,7 +102,7 @@ public class DualWield : MonoBehaviour
             if (joint != __instance.m_backMelee) return;
             if (ObjectDB.instance.GetItemPrefab(itemHash) is not { } item || !item.TryGetComponent(out ItemDrop component)) return;
             if (component.m_itemData.m_shared.m_name != dualWield.m_lastLeftItem) return;
-            joint = dualWield.m_leftAttachPoint == null ? __instance.m_backTool : dualWield.m_leftAttachPoint;
+            joint = dualWield.m_backLeftMelee == null ? __instance.m_backTool : dualWield.m_backLeftMelee;
 
             dualWield.m_lastLeftItem = "";
             dualWield.m_shouldChangeAttachPoint = false;
@@ -181,6 +181,7 @@ public class DualWield : MonoBehaviour
         [UsedImplicitly]
         private static void Postfix(Humanoid __instance, ItemDrop.ItemData item)
         {
+            if (__instance.IsDead()) return;
             if (!__instance.TryGetComponent(out DualWield dualWield)) return;
             if (dualWield.m_rightItem != item && dualWield.m_leftItem != item) return;
             dualWield.m_lastLeftItem = dualWield.m_leftItem?.m_shared.m_name ?? "";

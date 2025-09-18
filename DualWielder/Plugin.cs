@@ -15,7 +15,7 @@ namespace DualWielder
     public class DualWielderPlugin : BaseUnityPlugin
     {
         internal const string ModName = "DualWielder";
-        internal const string ModVersion = "1.0.0";
+        internal const string ModVersion = "1.0.1";
         internal const string Author = "RustyMods";
         private const string ModGUID = Author + "." + ModName;
         private const string ConfigFileName = ModGUID + ".cfg";

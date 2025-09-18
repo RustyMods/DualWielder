@@ -1,6 +1,6 @@
 {
   "name": "DualWielder",
-  "version_number": "1.0.0",
+  "version_number": "1.0.1",
   "website_url": "https://github.com/RustyMods/DualWielder/tree/master",
   "description": "Allows players to equip and use two different one-handed weapons simultaneously",
   "dependencies": [
