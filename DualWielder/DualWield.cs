@@ -60,7 +60,7 @@ public class DualWield : MonoBehaviour
         [UsedImplicitly]
         private static void Postfix(Attack __instance, HitData hitData, float damageFactor)
         {
-            if (!DualWielderPlugin.ApplyLeftHandedDamage) return;
+            if (!DualWielderPlugin.CombineDamages) return;
             if (__instance.m_character is not Player player) return;
             if (!player.gameObject.TryGetComponent(out DualWield component)) return;
             if (!component.m_isDualWielding) return;
@@ -177,7 +177,6 @@ public class DualWield : MonoBehaviour
             dualWield.m_lastLeftItem = dualWield.m_leftItem?.m_shared.m_name ?? "";
 
             dualWield.m_rightItem?.SetDualWielding(false);
-            dualWield.m_leftItem?.SetDualWielding(false);
             
             if (item == dualWield.m_rightItem && dualWield.m_leftItem != null)
             {
