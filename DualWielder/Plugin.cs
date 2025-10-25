@@ -8,6 +8,7 @@ using HarmonyLib;
 using JetBrains.Annotations;
 using ServerSync;
 using SkillManager;
+using UnityEngine;
 
 namespace DualWielder
 {
@@ -15,7 +16,7 @@ namespace DualWielder
     public class DualWielderPlugin : BaseUnityPlugin
     {
         internal const string ModName = "DualWielder";
-        internal const string ModVersion = "1.0.1";
+        internal const string ModVersion = "1.1.0";
         internal const string Author = "RustyMods";
         private const string ModGUID = Author + "." + ModName;
         private const string ConfigFileName = ModGUID + ".cfg";
@@ -29,10 +30,14 @@ namespace DualWielder
         private static ConfigEntry<Toggle> _serverConfigLocked = null!;
         private static ConfigEntry<Toggle> _combineDamages = null!;
         private static ConfigEntry<float> _damageModifier = null!;
+        private static ConfigEntry<KeyboardShortcut> _switchKey = null!;
         public static bool CombineDamages => _combineDamages.Value is Toggle.On;
         public static float DamageModifier => _damageModifier.Value;
 
         public static string DualWieldKey = string.Empty;
+        
+        public static KeyboardShortcut SwitchKey => _switchKey.Value;
+        
         public void Awake()
         {
             _serverConfigLocked = config("1 - General", "Lock Configuration", Toggle.On, "If on, the configuration is locked and can be changed by server admins only.");
@@ -55,6 +60,10 @@ namespace DualWielder
                     new AcceptableValueRange<float>(0f, 1f)
                 )
             );
+
+            _switchKey = config("2 - Settings", "Switch weapons hands",
+                new KeyboardShortcut(KeyCode.LeftAlt), "Set keycodes to switch left and right hand weapons",
+                false);
             
             Skill dualSkill = new Skill("DualWielder", "dualwielder_icon.png");
             dualSkill.Name.English("Dual Wield");
@@ -124,6 +133,18 @@ namespace DualWielder
             [UsedImplicitly] public bool? Browsable = null!;
             [UsedImplicitly] public string? Category = null!;
             [UsedImplicitly] public Action<ConfigEntryBase>? CustomDrawer = null!;
+        }
+        
+        class AcceptableShortcuts : AcceptableValueBase
+        {
+            public AcceptableShortcuts() : base(typeof(KeyboardShortcut))
+            {
+            }
+
+            public override object Clamp(object value) => value;
+            public override bool IsValid(object value) => true;
+
+            public override string ToDescriptionString() => "# Acceptable values: " + string.Join(", ", UnityInput.Current.SupportedKeyCodes);
         }
     }
 }

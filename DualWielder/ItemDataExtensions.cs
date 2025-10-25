@@ -10,19 +10,17 @@ public static class ItemDataExtensions
     [UsedImplicitly]
     public class ExtraData
     {
-        public int leftItemQuality = 1;
-        public HitData.DamageTypes leftItemDamagesPerLevel = new();
-        public HitData.DamageTypes leftItemDamage = new();
-        public float primaryStamina;
-        public float secondaryStamina;
+        public ItemDrop.ItemData? leftItem;
         public float baseStamina;
         public float baseSecondaryStamina;
+        public float baseEitr;
+        public float baseSecondaryEitr;
         public bool isDualWielding;
 
         public HitData.DamageTypes GetDamage(float worldLevel)
         {
-            HitData.DamageTypes damages = leftItemDamage;
-            if (leftItemQuality > 1) damages.Add(leftItemDamagesPerLevel, leftItemQuality - 1);
+            HitData.DamageTypes damages = leftItem?.m_shared.m_damages ?? new();
+            if (leftItem?.m_quality > 1) damages.Add(leftItem.m_shared.m_damagesPerLevel, leftItem.m_quality - 1);
             if (worldLevel > 0.0)
             {
                 damages.IncreaseEqually(worldLevel * Game.instance.m_worldLevelGearBaseDamage, true);
@@ -33,26 +31,38 @@ public static class ItemDataExtensions
 
         public float GetAttackStamina()
         {
-            var combinedStamina = baseStamina + primaryStamina;
+            float combinedStamina = baseStamina + leftItem?.m_shared.m_attack.m_attackStamina ?? 0f;
             return combinedStamina * 0.75f;
+        }
+
+        public float GetEitr()
+        {
+            float combinedEitr = baseEitr + leftItem?.m_shared.m_attack.m_attackEitr ?? 0f;
+            return combinedEitr * 0.75f;
+        }
+
+        public float GetSecondaryEitr()
+        {
+            float combinedEitr = baseSecondaryEitr + leftItem?.m_shared.m_secondaryAttack.m_attackEitr ?? 0f;
+            return combinedEitr * 0.75f;
         }
 
         public float GetSecondaryStamina()
         {
-            var combinedStamina = baseSecondaryStamina + secondaryStamina;
+            float combinedStamina = baseSecondaryStamina + leftItem?.m_shared.m_secondaryAttack.m_attackStamina ?? 0f;
             return combinedStamina * 0.75f;
         }
         public void Reset(ItemDrop.ItemData item)
         {
             item.m_shared.m_attack.m_attackStamina = baseStamina;
             item.m_shared.m_secondaryAttack.m_attackStamina = baseSecondaryStamina;
-            leftItemQuality = 1;
-            leftItemDamagesPerLevel = new();
-            leftItemDamage = new();
-            primaryStamina = 0f;
-            secondaryStamina = 0f;
+            item.m_shared.m_attack.m_attackEitr = baseEitr;
+            item.m_shared.m_secondaryAttack.m_attackEitr = baseSecondaryEitr;
+            leftItem = null;
             baseStamina = 0f;
             baseSecondaryStamina = 0f;
+            baseEitr = 0f;
+            baseSecondaryEitr = 0f;
         }
     }
 
@@ -60,37 +70,27 @@ public static class ItemDataExtensions
 
     private static HitData.DamageTypes GetLeftItemDamage(this ItemDrop.ItemData item, float worldLevel) =>
         item.GetExtraData().GetDamage(worldLevel);
-
-    private static void SetLeftItemDamage(this ItemDrop.ItemData item, ItemDrop.ItemData leftItem)
+    public static bool IsDualWielding(this ItemDrop.ItemData item) => item.GetExtraData().isDualWielding;
+    public static void ClearDualWield(this ItemDrop.ItemData item)
     {
         ExtraData data = item.GetExtraData();
-        data.leftItemDamage = leftItem.m_shared.m_damages;
-        data.leftItemDamagesPerLevel = leftItem.m_shared.m_damagesPerLevel;
-        data.leftItemQuality = leftItem.m_quality;
-        data.primaryStamina = leftItem.m_shared.m_attack.m_attackStamina;
-        data.secondaryStamina = leftItem.m_shared.m_secondaryAttack.m_attackStamina;
-        data.baseStamina = item.m_shared.m_attack.m_attackStamina;
-    }
-
-    public static bool IsDualWielding(this ItemDrop.ItemData item) => item.GetExtraData().isDualWielding;
-
-    public static void SetDualWielding(this ItemDrop.ItemData item, bool isDualWielding)
-    {
-        var data = item.GetExtraData();
-        data.isDualWielding = isDualWielding;
-        if (!isDualWielding)
-        {
-            data.Reset(item);
-        }
+        data.isDualWielding = false;
+        data.Reset(item);
     }
 
     public static void SetupDualWield(this ItemDrop.ItemData rightItem, ItemDrop.ItemData leftItem)
     {
-        rightItem.SetLeftItemDamage(leftItem);
-        rightItem.SetDualWielding(true);
         ExtraData data = rightItem.GetExtraData();
+        data.isDualWielding = true;
+        data.leftItem = leftItem;
+        data.baseStamina = rightItem.m_shared.m_attack.m_attackStamina;
+        data.baseSecondaryStamina = rightItem.m_shared.m_secondaryAttack.m_attackStamina;
+        data.baseEitr = rightItem.m_shared.m_attack.m_attackEitr;
+        data.baseSecondaryEitr = rightItem.m_shared.m_secondaryAttack.m_attackEitr;
         rightItem.m_shared.m_attack.m_attackStamina = data.GetAttackStamina();
         rightItem.m_shared.m_secondaryAttack.m_attackStamina = data.GetSecondaryStamina();
+        rightItem.m_shared.m_attack.m_attackEitr = data.GetEitr();
+        rightItem.m_shared.m_secondaryAttack.m_attackEitr = data.GetSecondaryEitr();
     }
 
     public static HitData.DamageTypes GetTotalDamage(this ItemDrop.ItemData item, float worldLevel, HitData.DamageTypes defaultValue)

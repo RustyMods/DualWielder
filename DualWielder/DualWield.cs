@@ -5,18 +5,24 @@ using SkillManager;
 
 namespace DualWielder;
 
+public static class DWVars
+{
+    public static readonly int DualWielding = "DualWielder.Dualwielding".GetStableHashCode();
+}
 public class DualWield : MonoBehaviour
 {
+    private ZNetView m_nview = null!;
+    private Player m_player = null!;
+    
     private ItemDrop.ItemData? m_rightItem;
     private ItemDrop.ItemData? m_leftItem;
     private bool m_isDualWielding;
-    private string m_lastLeftItem = "";
-    private bool m_shouldChangeAttachPoint;
 
     private Transform? m_backLeftMelee;
-    private readonly DualWieldState _state = new();
+    private readonly HolsteredState _state = new();
+    private float m_lastSwitchTime;
 
-    private class DualWieldState
+    private class HolsteredState
     {
         public bool wasDualWielding;
         public ItemDrop.ItemData? hiddenLeft;
@@ -25,6 +31,9 @@ public class DualWield : MonoBehaviour
     
     public void Awake()
     {
+        m_player = GetComponent<Player>();
+        m_nview = GetComponent<ZNetView>();
+        
         Transform? backOneHandAttach = Utils.FindChild(transform, "BackOneHanded_attach");
         Transform? go = Instantiate(backOneHandAttach, backOneHandAttach.parent);
         go.name = "BackOneHanded_left_attach";
@@ -32,6 +41,36 @@ public class DualWield : MonoBehaviour
         go.localRotation = Quaternion.Euler(117.401f, -91.143f, -85.99f);
         m_backLeftMelee = go;
     }
+
+    public void SetDualWielding(bool enable)
+    {
+        m_isDualWielding = enable;
+        if (m_nview.GetZDO() == null || !m_nview.IsOwner()) return;
+        m_nview.GetZDO().Set(DWVars.DualWielding, enable);
+    }
+    
+    public bool IsDualWielding() => m_nview.GetZDO()?.GetBool(DWVars.DualWielding) ?? m_isDualWielding;
+
+    public void Update()
+    {
+        if (!IsDualWielding()) return;
+        if (Time.time - m_lastSwitchTime < 1f) return;
+        
+        if (DualWielderPlugin.SwitchKey.IsPressed())
+        {
+            var right = m_rightItem;
+            var left = m_leftItem;
+            
+            m_player.UnequipItem(m_rightItem, false);
+            m_player.UnequipItem(m_leftItem, false);
+
+            m_player.EquipItem(left, false);
+            m_player.EquipItem(right, false);
+
+            m_lastSwitchTime = Time.time;
+        }
+    }
+    
     
     [HarmonyPatch(typeof(FejdStartup), nameof(FejdStartup.Awake))]
     private static class FejdStartup_Awake_Patch
@@ -95,17 +134,13 @@ public class DualWield : MonoBehaviour
     private static class AttachItem_Override
     {
         [UsedImplicitly]
-        private static void Prefix(VisEquipment __instance, int itemHash, ref Transform joint)
+        private static void Prefix(VisEquipment __instance, int itemHash, ref Transform joint, bool backAttach)
         {
-            if (!__instance.TryGetComponent(out DualWield dualWield)) return;
-            if (!dualWield.m_shouldChangeAttachPoint) return;
-            if (joint != __instance.m_backMelee) return;
-            if (ObjectDB.instance.GetItemPrefab(itemHash) is not { } item || !item.TryGetComponent(out ItemDrop component)) return;
-            if (component.m_itemData.m_shared.m_name != dualWield.m_lastLeftItem) return;
-            joint = dualWield.m_backLeftMelee == null ? __instance.m_backTool : dualWield.m_backLeftMelee;
+            if (!__instance.TryGetComponent(out DualWield dualWield) || !backAttach || joint != __instance.m_backMelee) return;
 
-            dualWield.m_lastLeftItem = "";
-            dualWield.m_shouldChangeAttachPoint = false;
+            if (__instance.m_leftBackItemInstance == null) return;
+
+            joint = dualWield.m_backLeftMelee!;
         }
     }
     
@@ -113,9 +148,9 @@ public class DualWield : MonoBehaviour
     private static class Humanoid_EquipItem_Patch
     {
         [UsedImplicitly]
-        private static bool Prefix(Humanoid __instance, ItemDrop.ItemData item, bool triggerEquipEffects, ref bool __result)
+        private static bool Prefix(Humanoid __instance, ItemDrop.ItemData? item, bool triggerEquipEffects, ref bool __result)
         {
-            if (!__instance.TryGetComponent(out DualWield dualWield)) return true;
+            if (!__instance.TryGetComponent(out DualWield dualWield) || item == null) return true;
             if (__instance.GetRightItem() is not { m_shared.m_itemType: ItemDrop.ItemData.ItemType.OneHandedWeapon} rightItem) return true;
             if (item.IsHarpoon() || item.IsDualItem()) return true;
             if (item.m_shared.m_itemType != ItemDrop.ItemData.ItemType.OneHandedWeapon) return true;
@@ -149,15 +184,11 @@ public class DualWield : MonoBehaviour
 
             rightItem.SetupDualWield(item);
             
-            if (dualWield.m_rightItem.m_shared.m_attachOverride is not ItemDrop.ItemData.ItemType.Tool && dualWield.m_leftItem.m_shared.m_attachOverride is not ItemDrop.ItemData.ItemType.Tool)
-            {
-                dualWield.m_shouldChangeAttachPoint = true;
-            }
-            
-            dualWield.m_isDualWielding = true;
+            dualWield.SetDualWielding(true);
             __result = true;
 
-            if (__instance.IsItemEquiped(item)) item.m_equipped = true;
+            rightItem.m_equipped = true;
+            item.m_equipped = true;
             __instance.SetupEquipment();
             if (triggerEquipEffects) __instance.TriggerEquipEffect(item);
             return false;
@@ -184,9 +215,8 @@ public class DualWield : MonoBehaviour
             if (__instance.IsDead()) return;
             if (!__instance.TryGetComponent(out DualWield dualWield)) return;
             if (dualWield.m_rightItem != item && dualWield.m_leftItem != item) return;
-            dualWield.m_lastLeftItem = dualWield.m_leftItem?.m_shared.m_name ?? "";
             
-            dualWield.m_rightItem?.SetDualWielding(false);
+            dualWield.m_rightItem?.ClearDualWield();
             
             if (item == dualWield.m_rightItem && dualWield.m_leftItem != null)
             {
@@ -197,7 +227,7 @@ public class DualWield : MonoBehaviour
 
             dualWield.m_rightItem = null;
             dualWield.m_leftItem = null;
-            dualWield.m_isDualWielding = false;
+            dualWield.SetDualWielding(false);
         }
     }
     

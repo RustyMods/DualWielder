@@ -23,6 +23,7 @@
     - The **Dual Wield skill** will not contribute to damage.
 - These configs let you balance dual wielding by tuning how much extra damage is gained.
 - Stamina use is modified calculating `right` + `left` x `0.75`
+- Eitr use is modified calculating `right` + `left` x `0.75`
 ---
 
 ### Damage Calculation
