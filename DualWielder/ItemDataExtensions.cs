@@ -20,7 +20,10 @@ public static class ItemDataExtensions
         public HitData.DamageTypes GetDamage(float worldLevel)
         {
             HitData.DamageTypes damages = leftItem?.m_shared.m_damages ?? new();
-            if (leftItem?.m_quality > 1) damages.Add(leftItem.m_shared.m_damagesPerLevel, leftItem.m_quality - 1);
+            if (leftItem?.m_quality > 1)
+            {
+                damages.Add(leftItem.m_shared.m_damagesPerLevel, leftItem.m_quality - 1);
+            }
             if (worldLevel > 0.0)
             {
                 damages.IncreaseEqually(worldLevel * Game.instance.m_worldLevelGearBaseDamage, true);

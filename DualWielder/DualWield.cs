@@ -152,7 +152,7 @@ public class DualWield : MonoBehaviour
         {
             if (!__instance.TryGetComponent(out DualWield dualWield) || item == null) return true;
             if (__instance.GetRightItem() is not { m_shared.m_itemType: ItemDrop.ItemData.ItemType.OneHandedWeapon} rightItem) return true;
-            if (item.IsHarpoon() || item.IsDualItem()) return true;
+            if (item.IsHarpoon() || item.IsDualItem() || item.m_shared.m_tamedOnly) return true;
             if (item.m_shared.m_itemType != ItemDrop.ItemData.ItemType.OneHandedWeapon) return true;
             
             if (__instance.GetLeftItem() is { } leftItem)

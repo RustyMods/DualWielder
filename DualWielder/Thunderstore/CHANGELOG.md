@@ -1,3 +1,6 @@
+# 1.1.1
+- disabled tame only weapons as left item
+
 # 1.1.0
 - tweaked holstered state
 - fixed registering rpc error
