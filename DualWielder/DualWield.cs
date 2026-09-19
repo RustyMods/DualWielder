@@ -265,7 +265,7 @@ public class DualWield : MonoBehaviour
         }
     }
 
-    [HarmonyPatch(typeof(ItemDrop.ItemData), nameof(ItemDrop.ItemData.GetTooltip), typeof(ItemDrop.ItemData), typeof(int), typeof(bool), typeof(float), typeof(int))]
+    [HarmonyPatch(typeof(ItemDrop.ItemData), nameof(ItemDrop.ItemData.GetTooltip), typeof(ItemDrop.ItemData), typeof(int), typeof(bool), typeof(float), typeof(int), typeof(bool))]
     private static class ItemDrop_ItemData_GetTooltip_Patch
     {
         [UsedImplicitly]
