@@ -13,7 +13,7 @@
         <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <LangVersion>10</LangVersion>
-        <Nullable>enable</Nullable>
+        <Nullable>disable</Nullable>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -100,9 +100,6 @@
         <Reference Include="UnityEngine.CoreModule">
             <HintPath>$(CorlibPath)\UnityEngine.CoreModule.dll</HintPath>
         </Reference>
-        <Reference Include="UnityEngine.ImageConversionModule">
-          <HintPath>Libs\UnityEngine.ImageConversionModule.dll</HintPath>
-        </Reference>
         <Reference Include="UnityEngine.InputLegacyModule">
           <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Valheim\valheim_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
         </Reference>
@@ -111,11 +108,9 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="DualWield.cs" />
-        <Compile Include="ItemDataExtensions.cs" />
-        <Compile Include="Managers\SkillManager.cs" />
         <Compile Include="Plugin.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
+        <Compile Include="src\DualWield.cs" />
         <Compile Include="VersionHandshake.cs"/>
     </ItemGroup>
     <ItemGroup>
@@ -124,12 +119,11 @@
     <ItemGroup>
         <Content Include=".gitignore"/>
         <Content Include="environment.props"/>
-        <EmbeddedResource Include="icons\dualwielder_icon.png" />
+        <Content Include="icons\dualwielder_icon.png" />
         <Content Include="ILRepack.targets"/>
         <Content Include="Libs\ServerSync.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="Libs\UnityEngine.ImageConversionModule.dll" />
         <Content Include="Thunderstore\CHANGELOG.md"/>
         <Content Include="Thunderstore\icon.png" />
         <Content Include="Thunderstore\manifest.json"/>

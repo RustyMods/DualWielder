@@ -5,9 +5,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
-using JetBrains.Annotations;
 using ServerSync;
-using SkillManager;
 using UnityEngine;
 
 namespace DualWielder
@@ -16,7 +14,7 @@ namespace DualWielder
     public class DualWielderPlugin : BaseUnityPlugin
     {
         internal const string ModName = "DualWielder";
-        internal const string ModVersion = "1.1.1";
+        internal const string ModVersion = "1.1.2";
         internal const string Author = "RustyMods";
         private const string ModGUID = Author + "." + ModName;
         private const string ConfigFileName = ModGUID + ".cfg";
@@ -28,49 +26,20 @@ namespace DualWielder
         public enum Toggle { On = 1, Off = 0 }
 
         private static ConfigEntry<Toggle> _serverConfigLocked = null!;
-        private static ConfigEntry<Toggle> _combineDamages = null!;
-        private static ConfigEntry<float> _damageModifier = null!;
-        private static ConfigEntry<KeyboardShortcut> _switchKey = null!;
-        public static bool CombineDamages => _combineDamages.Value is Toggle.On;
-        public static float DamageModifier => _damageModifier.Value;
 
-        public static string DualWieldKey = string.Empty;
-        
+        private static ConfigEntry<KeyboardShortcut> _switchKey = null!;
         public static KeyboardShortcut SwitchKey => _switchKey.Value;
+
         
         public void Awake()
         {
             _serverConfigLocked = config("1 - General", "Lock Configuration", Toggle.On, "If on, the configuration is locked and can be changed by server admins only.");
             _ = ConfigSync.AddLockingConfigEntry(_serverConfigLocked);
-            _combineDamages = config(
-                "2 - Settings", 
-                "Combine Weapon Damages", 
-                Toggle.On, 
-                "When enabled, dual-wielding will add the left-hand weapon’s damage to the right-hand weapon’s attacks."
-            );
-
-            _damageModifier = config(
-                "2 - Settings", 
-                "Total Damage Modifier", 
-                0.5f, 
-                new ConfigDescription(
-                    "Adjusts the total damage output when combining weapon damages. "
-                    + "Acts as a balancing factor to prevent dual wield from being overpowered. "
-                    + "For example: 0.5 = 50% of combined damage, 1.0 = 100% of combined damage.",
-                    new AcceptableValueRange<float>(0f, 1f)
-                )
-            );
 
             _switchKey = config("2 - Settings", "Switch weapons hands",
                 new KeyboardShortcut(KeyCode.LeftAlt), "Set keycodes to switch left and right hand weapons",
                 false);
             
-            Skill dualSkill = new Skill("DualWielder", "dualwielder_icon.png");
-            dualSkill.Name.English("Dual Wield");
-            DualWieldKey = $"${dualSkill.Name.Key}";
-            dualSkill.Description.English("Increases damage effectiveness while dual wielding.");
-            dualSkill.Configurable = true;
-
             Assembly assembly = Assembly.GetExecutingAssembly();
             _harmony.PatchAll(assembly);
             SetupWatcher();
@@ -125,26 +94,6 @@ namespace DualWielder
             bool synchronizedSetting = true)
         {
             return config(group, name, value, new ConfigDescription(description), synchronizedSetting);
-        }
-
-        private class ConfigurationManagerAttributes
-        {
-            [UsedImplicitly] public int? Order = null!;
-            [UsedImplicitly] public bool? Browsable = null!;
-            [UsedImplicitly] public string? Category = null!;
-            [UsedImplicitly] public Action<ConfigEntryBase>? CustomDrawer = null!;
-        }
-        
-        class AcceptableShortcuts : AcceptableValueBase
-        {
-            public AcceptableShortcuts() : base(typeof(KeyboardShortcut))
-            {
-            }
-
-            public override object Clamp(object value) => value;
-            public override bool IsValid(object value) => true;
-
-            public override string ToDescriptionString() => "# Acceptable values: " + string.Join(", ", UnityInput.Current.SupportedKeyCodes);
         }
     }
 }

@@ -1,3 +1,8 @@
+# 1.1.2
+- overhauled plugin
+- deep north update
+- updated server sync
+
 # 1.1.1
 - disabled tame only weapons as left item
 

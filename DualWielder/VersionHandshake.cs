@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
 using HarmonyLib;
 
 namespace DualWielder
@@ -80,7 +76,7 @@ namespace DualWielder
 
         public static void RPC_DualWielder_Version(ZRpc rpc, ZPackage pkg)
         {
-            string? version = pkg.ReadString();
+            string version = pkg.ReadString();
 
             DualWielderPlugin.DualWielderLogger.LogInfo(
                 $"Version check, local: {DualWielderPlugin.ModVersion},  remote: {version}");
